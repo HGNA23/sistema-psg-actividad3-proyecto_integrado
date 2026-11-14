@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSG - Persianas, Soportes y Blackouts | Sistema de Información</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 antialiased">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-sky-600 text-white text-2xl font-bold mb-4 shadow-lg shadow-sky-600/30">
+                    PSG
+                </div>
+                <h1 class="text-2xl font-bold text-slate-900">Microempresa PSG</h1>
+                <p class="text-sm text-slate-500 mt-1">Sistema de Cotizaciones e Inventario</p>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Seleccionar Rol / Usuario</label>
+                    <select id="login-role" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white text-slate-700 outline-none transition">
+                        <option value="admin">Administrador (Dueño)</option>
+                        <option value="commercial" selected>Asesor Comercial</option>
+                        <option value="technician">Técnico / Instalador</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Contraseña de Acceso</label>
+                    <input type="password" id="login-password" value="1234" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition" placeholder="••••">
+                </div>
+                <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-3 rounded-lg shadow-lg shadow-sky-600/30 transition duration-200">
+                    Ingresar al Sistema
+                </button>
+            </form>
+            <div class="mt-6 text-center text-xs text-slate-400">
+                Proyecto Integrado I · UPK (2026)
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP INTERFACE -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col">
+        <!-- Topbar -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 rounded-lg bg-sky-600 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-sky-600/20">
+                        PSG
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-900 text-lg">Sistema PSG</span>
+                        <span class="text-xs px-2 py-0.5 bg-sky-100 text-sky-800 rounded-full font-medium ml-2" id="user-role-badge">Asesor Comercial</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <span id="current-user-name" class="text-sm font-medium text-slate-600 hidden sm:inline">Usuario Operativo</span>
+                    <button onclick="handleLogout()" class="flex items-center space-x-1 text-sm text-rose-600 hover:text-rose-700 font-medium px-3 py-1.5 rounded-lg hover:bg-rose-50 transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>Salir</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="bg-white border-b border-slate-200 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-sky-600 text-sky-600 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie"></i><span>Panel Principal</span>
+                </button>
+                <button onclick="switchTab('clients')" id="nav-clients" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-users"></i><span>Clientes</span>
+                </button>
+                <button onclick="switchTab('quotes')" id="nav-quotes" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-file-invoice-dollar"></i><span>Cotizaciones</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-boxes-stacked"></i><span>Inventario y Stock</span>
+                </button>
+                <button onclick="switchTab('services')" id="nav-services" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-screwdriver-wrench"></i><span>Seguimiento de Servicios</span>
+                </button>
+                <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn px-4 py-3 border-b-2 font-medium text-sm border-transparent text-slate-600 hover:text-slate-900 flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line"></i><span>Reportes</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content Body -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <!-- TAB: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-600">Cotizaciones Mes</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">24</h3>
+                            <span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-arrow-up mr-1"></i>+12% vs mes anterior</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-600">Servicios en Instalación</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">7</h3>
+                            <span class="text-xs text-sky-600 font-medium">En ruta activa hoy</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-600">Clientes Registrados</p>
+                            <h3 class="text-3xl font-bold text-slate-900 mt-1">48</h3>
+                            <span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-user-plus mr-1"></i>3 nuevos esta semana</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-600">Alertas Stock Mínimo</p>
+                            <h3 class="text-3xl font-bold text-rose-600 mt-1" id="dash-alert-count">2</h3>
+                            <span class="text-xs text-rose-600 font-medium">Insumos bajo mínimo</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center justify-between">
+                            <span>Actividad Reciente del Sistema</span>
+                            <span class="text-xs text-slate-400 font-normal">Microempresa PSG · Bogotá</span>
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-4 pb-4 border-b border-slate-100">
+                                <div class="w-9 h-9 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-file-circle-plus"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-slate-800">Nueva cotización #COT-2026-049 creada</p>
+                                    <p class="text-xs text-slate-500">Cliente: Inversiones Andinas S.A. · Blackout Enrollable (2.40 x 1.80m)</p>
+                                </div>
+                                <span class="text-xs text-slate-400">Hace 15 min</span>
+                            </div>
+                            <div class="flex items-start space-x-4 pb-4 border-b border-slate-100">
+                                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-slate-800">Actualización de servicio #SRV-102</p>
+                                    <p class="text-xs text-slate-500">Técnico Carlos Pérez cambió estado a: <span class="text-amber-600 font-medium">En instalación</span></p>
+                                </div>
+                                <span class="text-xs text-slate-400">Hace 1 hora</span>
+                            </div>
+                            <div class="flex items-start space-x-4 pb-4 border-b border-slate-100">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <i class="fa-solid fa-boxes-stacked"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-slate-800">Entrada de inventario registrada</p>
+                                    <p class="text-xs text-slate-500">Ingreso de 50 metros de Tela Blackout Oscura (Proveedor: Texacol)</p>
+                                </div>
+                                <span class="text-xs text-slate-400">Hace 3 horas</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 mb-4">Accesos Directos</h3>
+                            <div class="space-y-3">
+                                <button onclick="switchTab('quotes'); openNewQuoteModal();" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 flex items-center justify-between transition group">
+                                    <span class="text-sm font-medium text-slate-700 group-hover:text-sky-700"><i class="fa-solid fa-plus mr-2 text-sky-600"></i>Crear Nueva Cotización</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="switchTab('clients'); openNewClientModal();" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 flex items-center justify-between transition group">
+                                    <span class="text-sm font-medium text-slate-700 group-hover:text-sky-700"><i class="fa-solid fa-user-plus mr-2 text-sky-600"></i>Registrar Nuevo Cliente</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                                <button onclick="switchTab('inventory');" class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:border-sky-500 hover:bg-sky-50/50 flex items-center justify-between transition group">
+                                    <span class="text-sm font-medium text-slate-700 group-hover:text-sky-700"><i class="fa-solid fa-triangle-exclamation mr-2 text-rose-600"></i>Revisar Alertas de Stock</span>
+                                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 rounded-xl bg-sky-50 border border-sky-100">
+                            <p class="text-xs font-semibold text-sky-900 uppercase">Microempresa PSG</p>
+                            <p class="text-xs text-sky-700 mt-1">Persianas, Soportes y Blackouts a la medida. Sistema optimizado para control comercial y existencias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CLIENTS -->
+            <div id="tab-clients" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Gestión de Clientes</h2>
+                        <p class="text-sm text-slate-500">Directorio de clientes, datos de contacto e historial de ofertas.</p>
+                    </div>
+                    <button onclick="openNewClientModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2.5 rounded-lg shadow-sm flex items-center space-x-2 transition">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Nuevo Cliente</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="relative w-full max-w-sm">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400"></i>
+                            <input type="text" id="client-search" oninput="filterClients()" placeholder="Buscar por nombre o teléfono..." class="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                    <th class="p-4">Cliente / Empresa</th>
+                                    <th class="p-4">Teléfono</th>
+                                    <th class="p-4">Dirección / Ciudad</th>
+                                    <th class="p-4">Última Oferta</th>
+                                    <th class="p-4 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body" class="divide-y divide-slate-200 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: QUOTES -->
+            <div id="tab-quotes" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Cotizaciones Comerciales</h2>
+                        <p class="text-sm text-slate-500">Cálculo por dimensiones, materiales, soportes e instalación.</p>
+                    </div>
+                    <button onclick="openNewQuoteModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2.5 rounded-lg shadow-sm flex items-center space-x-2 transition">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                        <span>Crear Cotización</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="relative w-full max-w-sm">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400"></i>
+                            <input type="text" id="quote-search" oninput="filterQuotes()" placeholder="Buscar por código o cliente..." class="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                    <th class="p-4">N° Cotización</th>
+                                    <th class="p-4">Cliente</th>
+                                    <th class="p-4">Fecha</th>
+                                    <th class="p-4">Valor Total</th>
+                                    <th class="p-4">Estado</th>
+                                    <th class="p-4 text-right">Acciones PDF / Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotes-table-body" class="divide-y divide-slate-200 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: INVENTORY -->
+            <div id="tab-inventory" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Control de Inventario e Insumos</h2>
+                        <p class="text-sm text-slate-500">Existencias, mínimos configurados y registro de movimientos.</p>
+                    </div>
+                    <button onclick="openMovementModal()" class="bg-sky-600 hover:bg-sky-700 text-white font-medium px-4 py-2.5 rounded-lg shadow-sm flex items-center space-x-2 transition">
+                        <i class="fa-solid fa-right-left"></i>
+                        <span>Registrar Movimiento (Entrada/Salida)</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                        <div class="relative w-full max-w-sm">
+                            <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400"></i>
+                            <input type="text" id="inventory-search" oninput="filterInventory()" placeholder="Buscar insumo o referencia..." class="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                    <th class="p-4">Código / Insumo</th>
+                                    <th class="p-4">Categoría</th>
+                                    <th class="p-4">Unidad</th>
+                                    <th class="p-4">Stock Actual</th>
+                                    <th class="p-4">Stock Mínimo</th>
+                                    <th class="p-4">Estado</th>
+                                    <th class="p-4 text-right">Último Costo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table-body" class="divide-y divide-slate-200 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: SERVICES -->
+            <div id="tab-services" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Seguimiento de Servicios e Instalaciones</h2>
+                        <p class="text-sm text-slate-500">Trazabilidad desde la aprobación hasta la instalación final.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select id="service-filter-status" onchange="filterServices()" class="px-3 py-2 bg-white rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="all">Todos los estados</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aprobada">Aprobada</option>
+                            <option value="En instalación">En instalación</option>
+                            <option value="Finalizada">Finalizada</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-600">
+                                    <th class="p-4">Servicio ID</th>
+                                    <th class="p-4">Cliente</th>
+                                    <th class="p-4">Detalle / Medidas</th>
+                                    <th class="p-4">Técnico Asignado</th>
+                                    <th class="p-4">Estado Actual</th>
+                                    <th class="p-4 text-right">Cambiar Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="services-table-body" class="divide-y divide-slate-200 text-sm text-slate-700">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: REPORTS -->
+            <div id="tab-reports" class="tab-content hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-900">Reportes Gerenciales</h2>
+                        <p class="text-sm text-slate-500">Totales por periodo, ventas registradas y productos más cotizados.</p>
+                    </div>
+                    <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium px-4 py-2.5 rounded-lg shadow-sm flex items-center space-x-2 transition">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Imprimir Reporte</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Productos Más Cotizados</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm font-medium mb-1">
+                                    <span>Blackout Enrollable Premium</span>
+                                    <span class="text-sky-600 font-bold">42%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                    <div class="bg-sky-600 h-2.5 rounded-full" style="width: 42%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm font-medium mb-1">
+                                    <span>Persiana Vertical Aluminio</span>
+                                    <span class="text-sky-600 font-bold">28%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                    <div class="bg-sky-600 h-2.5 rounded-full" style="width: 28%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm font-medium mb-1">
+                                    <span>Soporte Doble Reforzado</span>
+                                    <span class="text-sky-600 font-bold">18%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                    <div class="bg-sky-600 h-2.5 rounded-full" style="width: 18%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm font-medium mb-1">
+                                    <span>Sheer Elegance</span>
+                                    <span class="text-sky-600 font-bold">12%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                    <div class="bg-sky-600 h-2.5 rounded-full" style="width: 12%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-xs">
+                        <h3 class="text-lg font-bold text-slate-900 mb-4">Resumen Financiero del Mes</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                                <span class="text-sm text-slate-600">Total Cotizado</span>
+                                <span class="text-base font-bold text-slate-900">$18,450,000</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-emerald-50 rounded-lg">
+                                <span class="text-sm text-emerald-800 font-medium">Cotizaciones Aprobadas / Ventas</span>
+                                <span class="text-base font-bold text-emerald-700">$12,300,000</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-sky-50 rounded-lg">
+                                <span class="text-sm text-sky-800 font-medium">Servicios Instalados</span>
+                                <span class="text-base font-bold text-sky-700">19 servicios</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium">Operación realizada con éxito</span>
+    </div>
+
+    <!-- MODAL: NEW CLIENT -->
+    <div id="modal-client" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <h3 class="font-bold text-slate-900 text-lg">Registrar Nuevo Cliente</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveClient(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Nombre / Razón Social</label>
+                    <input type="text" id="new-client-name" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. Inversiones del Norte">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Teléfono de Contacto</label>
+                    <input type="text" id="new-client-phone" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. 310 456 7890">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Dirección y Ciudad</label>
+                    <input type="text" id="new-client-address" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. Calle 100 # 15-20, Bogotá">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: NEW QUOTE -->
+    <div id="modal-quote" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <h3 class="font-bold text-slate-900 text-lg">Crear Cotización PSG</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveQuote(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Seleccionar Cliente</label>
+                        <select id="quote-client-select" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                            <!-- Dynamic clients -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Tipo de Producto</label>
+                        <select id="quote-product-select" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="Blackout Enrollable">Blackout Enrollable ($120.000 / m²)</option>
+                            <option value="Persiana Vertical">Persiana Vertical ($95.000 / m²)</option>
+                            <option value="Sheer Elegance">Sheer Elegance ($160.000 / m²)</option>
+                            <option value="Soporte Doble">Soporte Doble Reforzado ($45.000 c/u)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Ancho (Metros)</label>
+                        <input type="number" step="0.01" id="quote-width" value="1.50" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Alto (Metros)</label>
+                        <input type="number" step="0.01" id="quote-height" value="2.00" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Cantidad</label>
+                        <input type="number" id="quote-qty" value="1" min="1" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Observaciones de Instalación</label>
+                    <textarea id="quote-notes" rows="2" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. Instalación en muro de concreto, tercer piso sin ascensor."></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm">Generar Cotización y PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: INVENTORY MOVEMENT -->
+    <div id="modal-movement" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <h3 class="font-bold text-slate-900 text-lg">Registrar Movimiento de Insumo</h3>
+                <button onclick="closeModals()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveMovement(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Insumo / Referencia</label>
+                    <select id="movement-item" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                        <option value="Tela Blackout Oscura">Tela Blackout Oscura (Metros)</option>
+                        <option value="Soporte Metálico Universal">Soporte Metálico Universal (Unidades)</option>
+                        <option value="Tubo Superior Aluminio">Tubo Superior Aluminio (Metros)</option>
+                        <option value="Cadena Plástica Accionamiento">Cadena Plástica Accionamiento (Metros)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Tipo de Movimiento</label>
+                        <select id="movement-type" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="Entrada">Entrada (Compra)</option>
+                            <option value="Salida">Salida (Consumo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Cantidad</label>
+                        <input type="number" id="movement-qty" value="10" min="1" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Motivo / Proveedor</label>
+                    <input type="text" id="movement-reason" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="Ej. Compra a proveedor Texacol S.A.">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeModals()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg text-sm font-medium bg-sky-600 hover:bg-sky-700 text-white shadow-sm">Registrar Movimiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        // Mock State
+        let currentUser = { role: 'commercial', name: 'Asesor Comercial (Oscar / Héctor)' };
+
+        let clients = [
+            { id: 1, name: 'Inversiones Andinas S.A.', phone: '310 123 4567', address: 'Cra 15 # 93-60, Bogotá', lastQuote: '#COT-2026-049' },
+            { id: 2, name: 'Constructora Bolívar Bogotá', phone: '320 987 6543', address: 'Av. Chile # 72-12, Bogotá', lastQuote: '#COT-2026-048' },
+            { id: 3, name: 'María Fernanda Restrepo', phone: '315 444 8899', address: 'Calle 127 # 19-20, Apt 402, Bogotá', lastQuote: '#COT-2026-047' },
+            { id: 4, name: 'Hotel Boutique Casa Usaquén', phone: '311 555 3322', address: 'Carrera 6 # 118-20, Bogotá', lastQuote: '#COT-2026-045' }
+        ];
+
+        let quotes = [
+            { id: 'COT-2026-049', client: 'Inversiones Andinas S.A.', date: '2026-11-14', total: '$720.000', status: 'Pendiente' },
+            { id: 'COT-2026-048', client: 'Constructora Bolívar Bogotá', date: '2026-11-12', total: '$2.450.000', status: 'Aprobada' },
+            { id: 'COT-2026-047', client: 'María Fernanda Restrepo', date: '2026-11-10', total: '$480.000', status: 'Aprobada' },
+            { id: 'COT-2026-045', client: 'Hotel Boutique Casa Usaquén', date: '2026-11-08', total: '$5.120.000', status: 'Finalizada' }
+        ];
+
+        let inventory = [
+            { code: 'INS-001', name: 'Tela Blackout Oscura (Beige/Blanco)', category: 'Telas', unit: 'Metros', stock: 18, min: 25, status: 'Crítico', cost: '$28.000' },
+            { code: 'INS-002', name: 'Soporte Metálico Universal', category: 'Herrajes', unit: 'Unidades', stock: 45, min: 20, status: 'Normal', cost: '$4.500' },
+            { code: 'INS-003', name: 'Tubo Superior Aluminio 38mm', category: 'Perfiles', unit: 'Metros', stock: 12, min: 15, status: 'Bajo', cost: '$18.000' },
+            { code: 'INS-004', name: 'Cadena Plástica Accionamiento', category: 'Accesorios', unit: 'Metros', stock: 120, min: 50, status: 'Normal', cost: '$2.200' },
+            { code: 'INS-005', name: 'Contrapeso Aluminio Inferior', category: 'Perfiles', unit: 'Metros', stock: 35, min: 15, status: 'Normal', cost: '$12.000' }
+        ];
+
+        let services = [
+            { id: 'SRV-102', client: 'Constructora Bolívar Bogotá', detail: '4 Blackouts Enrollables (2.20 x 1.80m)', technician: 'Carlos Pérez', status: 'En instalación' },
+            { id: 'SRV-101', client: 'María Fernanda Restrepo', detail: '2 Persianas Verticales y 1 Sheer Elegance', technician: 'Andrés Gómez', status: 'Aprobada' },
+            { id: 'SRV-100', client: 'Hotel Boutique Casa Usaquén', detail: '12 Persianas y Blackouts Motorizados', technician: 'Carlos Pérez', status: 'Finalizada' }
+        ];
+
+        // Login Handler
+        function handleLogin(e) {
+            e.preventDefault();
+            const role = document.getElementById('login-role').value;
+            currentUser.role = role;
+            
+            if (role === 'admin') currentUser.name = 'Administrador (Dueño PSG)';
+            else if (role === 'commercial') currentUser.name = 'Asesor Comercial (Oscar / Héctor)';
+            else currentUser.name = 'Técnico Instalador (Campo)';
+
+            document.getElementById('user-role-badge').innerText = role === 'admin' ? 'Administrador' : role === 'commercial' ? 'Asesor Comercial' : 'Técnico Instalador';
+            document.getElementById('current-user-name').innerText = currentUser.name;
+
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+
+            renderAll();
+            showToast('Sesión iniciada correctamente en sistema PSG');
+        }
+
+        function handleLogout() {
+            document.getElementById('app-screen').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            showToast('Sesión cerrada');
+        }
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('border-sky-600', 'text-sky-600');
+                el.classList.add('border-transparent', 'text-slate-600');
+            });
+
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-transparent', 'text-slate-600');
+                activeBtn.classList.add('border-sky-600', 'text-sky-600');
+            }
+        }
+
+        // Render Data Tables
+        function renderAll() {
+            renderClients();
+            renderQuotes();
+            renderInventory();
+            renderServices();
+            populateClientDropdown();
+        }
+
+        function renderClients() {
+            const tbody = document.getElementById('clients-table-body');
+            tbody.innerHTML = clients.map(c => `
+                <tr class="hover:bg-slate-50/80 transition">
+                    <td class="p-4 font-semibold text-slate-900">${c.name}</td>
+                    <td class="p-4 text-slate-600"><i class="fa-solid fa-phone mr-1.5 text-slate-400"></i>${c.phone}</td>
+                    <td class="p-4 text-slate-600"><i class="fa-solid fa-location-dot mr-1.5 text-slate-400"></i>${c.address}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-sky-50 text-sky-700 rounded-md font-medium text-xs">${c.lastQuote}</span></td>
+                    <td class="p-4 text-right">
+                        <button onclick="showToast('Abriendo historial de cliente: ${c.name}')" class="text-sky-600 hover:text-sky-800 font-medium text-xs bg-sky-50 px-3 py-1.5 rounded-md transition">Ver Ficha</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderQuotes() {
+            const tbody = document.getElementById('quotes-table-body');
+            tbody.innerHTML = quotes.map(q => {
+                let badgeColor = q.status === 'Aprobada' ? 'bg-emerald-50 text-emerald-700' : q.status === 'Finalizada' ? 'bg-sky-50 text-sky-750' : 'bg-amber-50 text-amber-700';
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-semibold text-sky-600">${q.id}</td>
+                        <td class="p-4 font-medium text-slate-900">${q.client}</td>
+                        <td class="p-4 text-slate-600">${q.date}</td>
+                        <td class="p-4 font-bold text-slate-900">${q.total}</td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${q.status}</span></td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="showToast('Generando PDF formal para ${q.id}...'); window.print();" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-md font-medium transition"><i class="fa-solid fa-file-pdf mr-1 text-rose-600"></i>PDF</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderInventory() {
+            const tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = inventory.map(i => {
+                let statusBadge = i.status === 'Crítico' ? 'bg-rose-100 text-rose-800' : i.status === 'Bajo' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-semibold text-slate-900">${i.code}<br><span class="text-xs font-normal text-slate-500">${i.name}</span></td>
+                        <td class="p-4 text-slate-600">${i.category}</td>
+                        <td class="p-4 text-slate-600">${i.unit}</td>
+                        <td class="p-4 font-bold text-slate-900">${i.stock}</td>
+                        <td class="p-4 text-slate-500">${i.min}</td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${statusBadge}">${i.status}</span></td>
+                        <td class="p-4 text-right font-medium text-slate-700">${i.cost}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderServices() {
+            const statusFilter = document.getElementById('service-filter-status').value;
+            const tbody = document.getElementById('services-table-body');
+            
+            const filtered = services.filter(s => statusFilter === 'all' || s.status === statusFilter);
+
+            tbody.innerHTML = filtered.map(s => {
+                let badgeColor = s.status === 'Aprobada' ? 'bg-emerald-50 text-emerald-700' : s.status === 'En instalación' ? 'bg-amber-50 text-amber-700' : s.status === 'Finalizada' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-700';
+                return `
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-semibold text-sky-600">${s.id}</td>
+                        <td class="p-4 font-medium text-slate-900">${s.client}</td>
+                        <td class="p-4 text-slate-600 text-xs">${s.detail}</td>
+                        <td class="p-4 text-slate-700 font-medium"><i class="fa-solid fa-user-gear mr-1.5 text-slate-400"></i>${s.technician}</td>
+                        <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeColor}">${s.status}</span></td>
+                        <td class="p-4 text-right">
+                            <select onchange="updateServiceStatus('${s.id}', this.value)" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-sky-500 outline-none font-medium">
+                                <option value="" disabled selected>Cambiar estado...</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Aprobada">Aprobada</option>
+                                <option value="En instalación">En instalación</option>
+                                <option value="Finalizada">Finalizada</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateClientDropdown() {
+            const select = document.getElementById('quote-client-select');
+            select.innerHTML = clients.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        }
+
+        // Modals
+        function openNewClientModal() { document.getElementById('modal-client').classList.remove('hidden'); }
+        function openNewQuoteModal() { document.getElementById('modal-quote').classList.remove('hidden'); }
+        function openMovementModal() { document.getElementById('modal-movement').classList.remove('hidden'); }
+        function closeModals() {
+            document.querySelectorAll('[id^="modal-"]').forEach(el => el.classList.add('hidden'));
+        }
+
+        // Form Handlers
+        function saveClient(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-client-name').value;
+            const phone = document.getElementById('new-client-phone').value;
+            const address = document.getElementById('new-client-address').value;
+
+            clients.push({ id: clients.length + 1, name, phone, address, lastQuote: 'Ninguna' });
+            closeModals();
+            renderClients();
+            populateClientDropdown();
+            showToast('Cliente registrado con éxito');
+            e.target.reset();
+        }
+
+        function saveQuote(e) {
+            e.preventDefault();
+            const client = document.getElementById('quote-client-select').value;
+            const product = document.getElementById('quote-product-select').value;
+            const w = parseFloat(document.getElementById('quote-width').value);
+            const h = parseFloat(document.getElementById('quote-height').value);
+            const qty = parseInt(document.getElementById('quote-qty').value);
+
+            let unitPrice = product.includes('Blackout') ? 120000 : product.includes('Vertical') ? 95000 : product.includes('Sheer') ? 160000 : 45000;
+            let totalVal = product.includes('Soporte') ? unitPrice * qty : Math.round(w * h * unitPrice * qty);
+            let formattedTotal = '$' + totalVal.toLocaleString('es-CO');
+
+            const newId = '#COT-2026-050';
+            quotes.unshift({ id: newId, client, date: '2026-11-14', total: formattedTotal, status: 'Pendiente' });
+            
+            closeModals();
+            renderQuotes();
+            switchTab('quotes');
+            showToast('Cotización ' + newId + ' creada correctamente');
+            e.target.reset();
+        }
+
+        function saveMovement(e) {
+            e.preventDefault();
+            const itemName = document.getElementById('movement-item').value;
+            const type = document.getElementById('movement-type').value;
+            const qty = parseInt(document.getElementById('movement-qty').value);
+
+            let item = inventory.find(i => i.name.includes(itemName.split(' ')[0]));
+            if(item) {
+                if(type === 'Entrada') item.stock += qty;
+                else item.stock = Math.max(0, item.stock - qty);
+                
+                item.status = item.stock <= item.min ? 'Crítico' : item.stock <= item.min + 5 ? 'Bajo' : 'Normal';
+            }
+
+            closeModals();
+            renderInventory();
+            showToast('Movimiento de inventario registrado con éxito');
+            e.target.reset();
+        }
+
+        function updateServiceStatus(srvId, newStatus) {
+            let srv = services.find(s => s.id === srvId);
+            if(srv) {
+                srv.status = newStatus;
+                renderServices();
+                showToast(`Servicio ${srvId} actualizado a: ${newStatus}`);
+            }
+        }
+
+        // Search Filters
+        function filterClients() {
+            const query = document.getElementById('client-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#clients-table-body tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function filterQuotes() {
+            const query = document.getElementById('quote-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#quotes-table-body tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function filterInventory() {
+            const query = document.getElementById('inventory-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#inventory-table-body tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
